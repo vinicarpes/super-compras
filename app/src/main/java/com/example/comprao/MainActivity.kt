@@ -8,8 +8,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
@@ -50,163 +52,167 @@ class MainActivity : ComponentActivity() {
         setContent {
             CompraoTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Column(
-                        verticalArrangement = Arrangement.Top,
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(innerPadding)
-                    ) {
-                        ImagemTopo()
-                        AdicionarItem()
-                        BotaoSalvarItem(onClick = {})
-                        Titulo(
-                            texto = "Lista de Compras"
-                        )
-                        ItemDaLista()
-                        Titulo(texto = "Comprado")
-                    }
-
+                    ListaDeCompras(Modifier.padding(innerPadding))
                 }
             }
         }
     }
-}
 
-
-@Composable
-fun ItemDaLista(modifier: Modifier = Modifier) {
-    Column(verticalArrangement = Arrangement.Top, modifier = modifier) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start
+    @Composable
+    fun ListaDeCompras(modifier: Modifier = Modifier) {
+        var listaDeItens = rememberSaveable { mutableListOf<ItemCompra>() }
+        Column(
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = modifier
         ) {
-            Checkbox(
-                checked = false,
-                onCheckedChange = {},
-                modifier = Modifier
-                    .padding(end = 8.dp)
-                    .requiredSize(24.dp)
+            ImagemTopo()
+            AdicionarItem(aoSalvarItem = { item ->
+                listaDeItens.add(ItemCompra(texto=item))
+            })
+            Spacer(Modifier.height(48.dp))
+            Titulo(
+                texto = "Lista de Compras"
             )
-            Text(
-                text = "suco",
-                style = Typography.bodyMedium,
-                textAlign = TextAlign.Start,
-                modifier = Modifier.weight(1f)
-            )
-            Icone(
-                Icons.Default.Delete, Modifier
-                    .padding(end = 8.dp)
-                    .size(16.dp)
-            )
-            Icone(Icons.Default.Edit, Modifier.size(16.dp))
+            Column {
+                listaDeItens.forEach { item ->
+                    ItemDaLista(item)
+                }
+            }
+            Titulo(texto = "Comprado")
         }
-        Text(
-            "Segunda-Feiras (30/11/2024) às 8:30",
-            Modifier.padding(top = 8.dp),
-            style = Typography.labelSmall
+    }
+
+
+    @Composable
+    fun ItemDaLista(item: ItemCompra, modifier: Modifier = Modifier) {
+        Column(verticalArrangement = Arrangement.Top, modifier = modifier) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start
+            ) {
+                Checkbox(
+                    checked = false,
+                    onCheckedChange = {},
+                    modifier = Modifier
+                        .padding(end = 8.dp)
+                        .requiredSize(24.dp)
+                )
+                Text(
+                    text = item.texto,
+                    style = Typography.bodyMedium,
+                    textAlign = TextAlign.Start,
+                    modifier = Modifier.weight(1f)
+                )
+                Icone(
+                    Icons.Default.Delete, Modifier
+                        .padding(end = 8.dp)
+                        .size(16.dp)
+                )
+                Icone(Icons.Default.Edit, Modifier.size(16.dp))
+            }
+            Text(
+                "Segunda-Feiras (30/11/2024) às 8:30",
+                Modifier.padding(top = 8.dp),
+                style = Typography.labelSmall
+            )
+        }
+    }
+
+    @Composable
+    fun AdicionarItem(aoSalvarItem: (texto: String) -> Unit, modifier: Modifier = Modifier) {
+        var texto = rememberSaveable { mutableStateOf("") }
+        OutlinedTextField(
+            placeholder = {
+                Text(
+                    text = "Digite o item que deseja adicionar",
+                    color = Color.Gray,
+                    style = Typography.bodyMedium
+                )
+            },
+            value = texto.value,
+            onValueChange = { texto.value = it },
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            singleLine = true,
+            shape = RoundedCornerShape(24.dp)
+        )
+        Button(
+            shape = RoundedCornerShape(24.dp),
+            onClick = { aoSalvarItem(texto.value) },
+            colors = ButtonDefaults.buttonColors(Coral),
+            modifier = modifier
+        ) {
+            Text(
+                text = "Salvar Item",
+                color = Color.White,
+                style = Typography.bodyLarge,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+            )
+        }
+    }
+
+    @Composable
+    fun ImagemTopo(modifier: Modifier = Modifier) {
+        Image(
+            painter = painterResource(id = R.drawable.imagem_topo),
+            contentDescription = null,
+            modifier = modifier.size(160.dp)
         )
     }
-}
 
-@Composable
-fun AdicionarItem(modifier: Modifier = Modifier) {
-    var texto = rememberSaveable { mutableStateOf("") }
-    OutlinedTextField(
-        placeholder = {
-            Text(
-                text = "Digite o item que deseja adicionar",
-                color = Color.Gray,
-                style = Typography.bodyMedium
-            )
-        },
-        value = texto.value,
-        onValueChange = { texto.value = it },
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(8.dp),
-        singleLine = true,
-        shape = RoundedCornerShape(24.dp)
-    )
-}
+    @Composable
+    fun Icone(icone: ImageVector, modifier: Modifier = Modifier) {
+        Icon(
+            icone, contentDescription = "Editar", modifier, tint = Marinho
+        )
+    }
 
-@Composable
-fun BotaoSalvarItem(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Button(
-        shape = RoundedCornerShape(24.dp),
-        onClick = onClick,
-        colors = ButtonDefaults.buttonColors(Coral),
-        modifier = modifier) {
-        Text(
-            text = "Salvar Item",
-            color = Color.White,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp))
+    @Composable
+    fun Titulo(texto: String, modifier: Modifier = Modifier) {
+        Text(text = texto, style = Typography.headlineLarge, modifier = modifier)
+    }
+
+    @Preview
+    @Composable
+    private fun ItemDaListaPreview() {
+        CompraoTheme {
+            ItemDaLista(item = ItemCompra(texto = "teste"))
+        }
+    }
+
+    @Preview
+    @Composable
+    private fun AdicionarItemPreview() {
+        CompraoTheme { AdicionarItem(aoSalvarItem = {}) }
+    }
+
+    @Preview
+    @Composable
+    fun ImagemTopoPreview() {
+        CompraoTheme {
+            ImagemTopo()
+        }
+    }
+
+    @Preview
+    @Composable
+    fun IconePreview() {
+        CompraoTheme {
+            Icone(Icons.Default.Edit)
+        }
+    }
+
+    @Preview
+    @Composable
+    fun TituloPreview() {
+        CompraoTheme {
+            Titulo(texto = "Lista de Compras")
+        }
     }
 }
 
-@Composable
-fun ImagemTopo(modifier: Modifier = Modifier) {
-    Image(
-        painter = painterResource(id = R.drawable.imagem_topo),
-        contentDescription = null,
-        modifier = modifier.size(160.dp)
-    )
-}
-
-@Composable
-fun Icone(icone: ImageVector, modifier: Modifier = Modifier) {
-    Icon(
-        icone, contentDescription = "Editar", modifier, tint = Marinho
-    )
-}
-
-@Composable
-fun Titulo(texto: String, modifier: Modifier = Modifier) {
-    Text(text = texto, style = Typography.headlineLarge, modifier = modifier)
-}
-
-@Preview
-@Composable
-private fun ItemDaListaPreview() {
-    CompraoTheme {
-        ItemDaLista()
-    }
-}
-
-@Preview
-@Composable
-private fun AdicionarItemPreview() {
-    CompraoTheme { AdicionarItem() }
-}
-
-@Preview
-@Composable
-fun ImagemTopoPreview() {
-    CompraoTheme {
-        ImagemTopo()
-    }
-}
-
-@Preview
-@Composable
-fun IconePreview() {
-    CompraoTheme {
-        Icone(Icons.Default.Edit)
-    }
-}
-
-@Preview
-@Composable
-fun TituloPreview() {
-    CompraoTheme {
-        Titulo(texto = "Lista de Compras")
-    }
-}
-
-
-@Preview
-@Composable
-private fun SalvarItemPreview() {
-    CompraoTheme {
-        BotaoSalvarItem(onClick = {})
-    }
-
-}
+data class ItemCompra(
+    var texto: String
+)
