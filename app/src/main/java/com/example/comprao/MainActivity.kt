@@ -1,5 +1,7 @@
 package com.example.comprao
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -60,23 +62,23 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun ListaDeCompras(modifier: Modifier = Modifier) {
-        var listaDeItens = rememberSaveable { mutableListOf<ItemCompra>() }
+        var listaDeItens by rememberSaveable { mutableStateOf(listOf<ItemCompra>()) }
         Column(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = modifier
         ) {
             ImagemTopo()
-            AdicionarItem(aoSalvarItem = { item ->
-                listaDeItens.add(ItemCompra(texto=item))
+            AdicionarItem(aoSalvarItem = { textoNovo ->
+                listaDeItens = listaDeItens + ItemCompra(textoNovo)
             })
             Spacer(Modifier.height(48.dp))
             Titulo(
                 texto = "Lista de Compras"
             )
             Column {
-                listaDeItens.forEach { item ->
-                    ItemDaLista(item)
+                listaDeItens.forEach { item : ItemCompra ->
+                    ItemDaLista(item = item)
                 }
             }
             Titulo(texto = "Comprado")
