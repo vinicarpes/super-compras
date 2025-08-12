@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
@@ -38,6 +39,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.comprao.ui.theme.CompraoTheme
+import com.example.comprao.ui.theme.Coral
 import com.example.comprao.ui.theme.Marinho
 import com.example.comprao.ui.theme.Typography
 
@@ -128,7 +130,11 @@ fun AdicionarItem(modifier: Modifier = Modifier) {
 
 @Composable
 fun BotaoSalvarItem(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Button(shape = RoundedCornerShape(24.dp), onClick = onClick, modifier = modifier) {
+    Button(
+        shape = RoundedCornerShape(24.dp),
+        onClick = onClick,
+        colors = ButtonDefaults.buttonColors(Coral),
+        modifier = modifier) {
         Text(
             text = "Salvar Item",
             color = Color.White,
