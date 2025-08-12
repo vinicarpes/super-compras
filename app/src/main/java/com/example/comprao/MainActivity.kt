@@ -20,6 +20,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.comprao.ui.theme.CompraoTheme
+import com.example.comprao.ui.theme.Typography
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,12 +29,12 @@ class MainActivity : ComponentActivity() {
         setContent {
             CompraoTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-//                    Titulo(modifier = Modifier.padding(innerPadding))
+                    Titulo(modifier = Modifier.padding(innerPadding))
 //                    ImagemTopo(modifier = Modifier.padding(innerPadding))
-                    Icone(
-                        icone = Icons.Default.Edit,
-                        modifier = Modifier.padding(innerPadding)
-                    )
+//                    Icone(
+//                        icone = Icons.Default.Edit,
+//                        modifier = Modifier.padding(innerPadding)
+//                    )
                 }
             }
         }
@@ -79,7 +80,7 @@ fun IconePreview() {
 }
 @Composable
 fun Titulo(modifier: Modifier){
-    Text(text = "Lista de Compras", modifier = modifier)
+    Text(text = "Lista de Compras", modifier = modifier, style = Typography.headlineLarge)
 }
 
 @Preview
