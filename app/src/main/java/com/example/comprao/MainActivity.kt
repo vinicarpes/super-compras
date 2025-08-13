@@ -17,6 +17,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -67,21 +70,24 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun ListaDeCompras(modifier: Modifier = Modifier) {
         var listaDeItens by rememberSaveable { mutableStateOf(listOf<ItemCompra>()) }
-        Column(
+        LazyColumn(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = modifier
         ) {
-            ImagemTopo()
-            AdicionarItem(aoSalvarItem = { item ->
-                listaDeItens = listaDeItens + item
-            })
-            Spacer(Modifier.height(48.dp))
-            Titulo(
-                texto = "Lista de Compras"
-            )
+            item {
+
+                ImagemTopo()
+                AdicionarItem(aoSalvarItem = { item ->
+                    listaDeItens = listaDeItens + item
+                })
+                Spacer(Modifier.height(48.dp))
+                Titulo(
+                    texto = "Lista de Compras"
+                )
+            }
             ListaDeItens(
-                lista = listaDeItens.filter { ! it.comprado },
+                lista = listaDeItens.filter { !it.comprado },
                 aoMudarStatus = { itemSelecionado ->
                     listaDeItens = listaDeItens.map { itemMap ->
                         if (itemSelecionado == itemMap) {
@@ -104,9 +110,11 @@ class MainActivity : ComponentActivity() {
                     listaDeItens = listaDeItens - itemRemovido
                 }
             )
-            Titulo(texto = "Comprado")
+            item {
+                Titulo(texto = "Comprado")
+            }
 
-            if (listaDeItens.any { it.comprado }){
+            if (listaDeItens.any { it.comprado }) {
                 ListaDeItens(
                     lista = listaDeItens.filter { it.comprado },
                     aoMudarStatus = { itemSelecionado ->
@@ -135,212 +143,204 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    @Composable
-    fun ListaDeItens(
+    fun LazyListScope.ListaDeItens(
         lista: List<ItemCompra>,
         aoMudarStatus: (ItemCompra) -> Unit,
-        aoEditarItem: (ItemCompra, novoTexto: String) -> Unit = {_,_ ->},
-        aoRemoverItem: (ItemCompra) -> Unit,
-        modifier: Modifier = Modifier
+        aoEditarItem: (ItemCompra, novoTexto: String) -> Unit = { _, _ -> },
+        aoRemoverItem: (ItemCompra) -> Unit
     ) {
-        Column {
-            lista.forEach { item: ItemCompra ->
-                ItemDaLista(
-                    item = item,
-                    aoMudarStatus = aoMudarStatus,
-                    aoEditarItem = aoEditarItem,
-                    aoRemoverItem = aoRemoverItem
-                )
-            }
+        items(lista.size) { index ->
+            ItemDaLista(
+                item = lista[index],
+                aoMudarStatus = aoMudarStatus,
+                aoEditarItem = aoEditarItem,
+                aoRemoverItem = aoRemoverItem
+            )
         }
+
     }
+}
 
 
-    @Composable
-    fun ItemDaLista(
-        item: ItemCompra,
-        aoMudarStatus: (item: ItemCompra) -> Unit = {},
-        aoRemoverItem: (item: ItemCompra) -> Unit = {},
-        aoEditarItem: (item: ItemCompra, novoTexto: String) -> Unit = {_, _ ->},
-        modifier: Modifier = Modifier
-    ) {
-        Column(verticalArrangement = Arrangement.Top, modifier = modifier) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Start
-            ) {
-                var textoEditado  by rememberSaveable { mutableStateOf(item.texto) }
-                var edicao by rememberSaveable {mutableStateOf(false)}
+@Composable
+fun ItemDaLista(
+    item: ItemCompra,
+    aoMudarStatus: (item: ItemCompra) -> Unit = {},
+    aoRemoverItem: (item: ItemCompra) -> Unit = {},
+    aoEditarItem: (item: ItemCompra, novoTexto: String) -> Unit = { _, _ -> },
+    modifier: Modifier = Modifier
+) {
+    Column(verticalArrangement = Arrangement.Top, modifier = modifier) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
+        ) {
+            var textoEditado by rememberSaveable { mutableStateOf(item.texto) }
+            var edicao by rememberSaveable { mutableStateOf(false) }
 
-                Checkbox(
-                    checked = item.comprado,
-                    onCheckedChange = { aoMudarStatus(item) },
-                    modifier = Modifier
-                        .padding(end = 8.dp)
-                        .requiredSize(24.dp)
+            Checkbox(
+                checked = item.comprado,
+                onCheckedChange = { aoMudarStatus(item) },
+                modifier = Modifier
+                    .padding(end = 8.dp)
+                    .requiredSize(24.dp)
+            )
+
+            if (edicao) {
+                OutlinedTextField(
+                    value = textoEditado,
+                    onValueChange = { textoEditado = it },
+                    singleLine = true,
+                    shape = RoundedCornerShape(24.dp),
+                    modifier = Modifier.weight(1f)
                 )
-
-                if(edicao){
-                    OutlinedTextField(
-                        value = textoEditado,
-                        onValueChange = { textoEditado = it },
-                        singleLine = true,
-                        shape = RoundedCornerShape(24.dp),
-                        modifier = Modifier.weight(1f)
-                    )
-                    IconButton(
-                        onClick = {
-                            aoEditarItem(item, textoEditado)
-                            edicao = false }
-                    ) {
-                        Icone(
-                            Icons.Default.Done,
-                            Modifier.size(16.dp)
-                        )
-                    }
-
-                } else{
-                    Text(
-                        text = item.texto,
-                        style = Typography.bodyMedium,
-                        textAlign = TextAlign.Start,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
                 IconButton(
-                    onClick = { aoRemoverItem(item) },
-                    modifier = Modifier.padding(end = 8.dp)
+                    onClick = {
+                        aoEditarItem(item, textoEditado)
+                        edicao = false
+                    }
                 ) {
                     Icone(
-                        Icons.Default.Delete,
+                        Icons.Default.Done,
                         Modifier.size(16.dp)
                     )
                 }
 
-                IconButton(
-                    onClick = {
-                        edicao = true
-                    }) { }
-                Icone(Icons.Default.Edit, Modifier.size(16.dp))
-            }
-            Text(
-                item.dataHora,
-                Modifier.padding(top = 8.dp),
-                style = Typography.labelSmall
-            )
-        }
-    }
-
-    @Composable
-    fun AdicionarItem(aoSalvarItem: (item: ItemCompra) -> Unit, modifier: Modifier = Modifier) {
-        var texto by rememberSaveable { mutableStateOf("") }
-        OutlinedTextField(
-            placeholder = {
+            } else {
                 Text(
-                    text = "Digite o item que deseja adicionar",
-                    color = Color.Gray,
-                    style = Typography.bodyMedium
+                    text = item.texto,
+                    style = Typography.bodyMedium,
+                    textAlign = TextAlign.Start,
+                    modifier = Modifier.weight(1f)
                 )
-            },
-            value = texto,
-            onValueChange = { texto = it },
-            modifier = modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            singleLine = true,
-            shape = RoundedCornerShape(24.dp)
+            }
+            IconButton(
+                onClick = { aoRemoverItem(item) },
+                modifier = Modifier.padding(end = 8.dp)
+            ) {
+                Icone(
+                    Icons.Default.Delete,
+                    Modifier.size(16.dp)
+                )
+            }
+
+            IconButton(
+                onClick = {
+                    edicao = true
+                }) { }
+            Icone(Icons.Default.Edit, Modifier.size(16.dp))
+        }
+        Text(
+            item.dataHora,
+            Modifier.padding(top = 8.dp),
+            style = Typography.labelSmall
         )
-        Button(
-            shape = RoundedCornerShape(24.dp),
-            onClick = {
-                aoSalvarItem(ItemCompra(texto,false, getDataHora()))
-                texto = ""
-            },
-            colors = ButtonDefaults.buttonColors(Coral),
-            modifier = modifier
-        ) {
-            Text(
-                text = "Salvar Item",
-                color = Color.White,
-                style = Typography.bodyLarge,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
-            )
-        }
-    }
-
-    fun getDataHora(): String{
-        val dataHoraAtual = System.currentTimeMillis()
-        val dataHoraFormatada = SimpleDateFormat("EEEE (dd/MM/yyyy) 'às' HH:mm", Locale("pt", "BR"))
-        return dataHoraFormatada.format(dataHoraAtual)
-    }
-
-    @Composable
-    fun ImagemTopo(modifier: Modifier = Modifier) {
-        Image(
-            painter = painterResource(id = R.drawable.imagem_topo),
-            contentDescription = null,
-            modifier = modifier.size(160.dp)
-        )
-    }
-
-    @Composable
-    fun Icone(icone: ImageVector, modifier: Modifier = Modifier) {
-        Icon(
-            icone, contentDescription = "Editar", modifier, tint = Marinho
-        )
-    }
-
-    @Composable
-    fun Titulo(texto: String, modifier: Modifier = Modifier) {
-        Text(text = texto, style = Typography.headlineLarge, modifier = modifier)
-    }
-
-    @Preview
-    @Composable
-    private fun ItemDaListaPreview() {
-        CompraoTheme {
-            ItemDaLista(item = ItemCompra(texto = "teste", false, getDataHora()))
-        }
-    }
-
-    @Preview
-    @Composable
-    private fun AdicionarItemPreview() {
-        CompraoTheme { AdicionarItem(aoSalvarItem = {}) }
-    }
-
-    @Preview
-    @Composable
-    fun ImagemTopoPreview() {
-        CompraoTheme {
-            ImagemTopo()
-        }
-    }
-
-    @Preview
-    @Composable
-    fun IconePreview() {
-        CompraoTheme {
-            Icone(Icons.Default.Edit)
-        }
-    }
-
-    @Preview
-    @Composable
-    fun TituloPreview() {
-        CompraoTheme {
-            Titulo(texto = "Lista de Compras")
-        }
-    }
-
-    @Preview
-    @Composable
-    private fun ListaComprapreview() {
-        CompraoTheme {
-            ListaDeCompras()
-        }
     }
 }
+
+@Composable
+fun AdicionarItem(aoSalvarItem: (item: ItemCompra) -> Unit, modifier: Modifier = Modifier) {
+    var texto by rememberSaveable { mutableStateOf("") }
+    OutlinedTextField(
+        placeholder = {
+            Text(
+                text = "Digite o item que deseja adicionar",
+                color = Color.Gray,
+                style = Typography.bodyMedium
+            )
+        },
+        value = texto,
+        onValueChange = { texto = it },
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        singleLine = true,
+        shape = RoundedCornerShape(24.dp)
+    )
+    Button(
+        shape = RoundedCornerShape(24.dp),
+        onClick = {
+            aoSalvarItem(ItemCompra(texto, false, getDataHora()))
+            texto = ""
+        },
+        colors = ButtonDefaults.buttonColors(Coral),
+        modifier = modifier
+    ) {
+        Text(
+            text = "Salvar Item",
+            color = Color.White,
+            style = Typography.bodyLarge,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+        )
+    }
+}
+
+fun getDataHora(): String {
+    val dataHoraAtual = System.currentTimeMillis()
+    val dataHoraFormatada = SimpleDateFormat("EEEE (dd/MM/yyyy) 'às' HH:mm", Locale("pt", "BR"))
+    return dataHoraFormatada.format(dataHoraAtual)
+}
+
+@Composable
+fun ImagemTopo(modifier: Modifier = Modifier) {
+    Image(
+        painter = painterResource(id = R.drawable.imagem_topo),
+        contentDescription = null,
+        modifier = modifier.size(160.dp)
+    )
+}
+
+@Composable
+fun Icone(icone: ImageVector, modifier: Modifier = Modifier) {
+    Icon(
+        icone, contentDescription = "Editar", modifier, tint = Marinho
+    )
+}
+
+@Composable
+fun Titulo(texto: String, modifier: Modifier = Modifier) {
+    Text(text = texto, style = Typography.headlineLarge, modifier = modifier)
+}
+
+@Preview
+@Composable
+private fun ItemDaListaPreview() {
+    CompraoTheme {
+        ItemDaLista(item = ItemCompra(texto = "teste", false, getDataHora()))
+    }
+}
+
+@Preview
+@Composable
+private fun AdicionarItemPreview() {
+    CompraoTheme { AdicionarItem(aoSalvarItem = {}) }
+}
+
+@Preview
+@Composable
+fun ImagemTopoPreview() {
+    CompraoTheme {
+        ImagemTopo()
+    }
+}
+
+@Preview
+@Composable
+fun IconePreview() {
+    CompraoTheme {
+        Icone(Icons.Default.Edit)
+    }
+}
+
+@Preview
+@Composable
+fun TituloPreview() {
+    CompraoTheme {
+        Titulo(texto = "Lista de Compras")
+    }
+}
+
+
 
 data class ItemCompra(
     var texto: String,
