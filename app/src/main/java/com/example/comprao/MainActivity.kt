@@ -36,6 +36,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
@@ -238,7 +239,12 @@ fun AdicionarItem(aoSalvarItem: (item: ItemCompra) -> Unit, modifier: Modifier =
             .fillMaxWidth()
             .padding(8.dp),
         singleLine = true,
-        shape = RoundedCornerShape(24.dp)
+        shape = RoundedCornerShape(24.dp),
+        colors = TextFieldDefaults.colors(
+            unfocusedIndicatorColor = Coral,
+            focusedIndicatorColor = Coral,
+            cursorColor = Coral
+        )
     )
     Button(
         shape = RoundedCornerShape(24.dp),
