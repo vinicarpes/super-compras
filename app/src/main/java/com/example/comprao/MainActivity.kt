@@ -1,5 +1,6 @@
 package com.example.comprao
 
+import android.graphics.PathDashPathEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import android.os.Bundle
@@ -7,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -45,7 +47,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusModifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -75,27 +80,58 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-    @Composable
-    fun ListaDeCompras(modifier: Modifier = Modifier, viewModel: CompraoViewModel) {
-        val listaDeItens by viewModel.listaDeItens.collectAsState()
-        LazyColumn(
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = modifier.padding(horizontal = 16.dp)
-        ) {
-            item {
+@Composable
+fun ListaDeCompras(modifier: Modifier = Modifier, viewModel: CompraoViewModel) {
+    val listaDeItens by viewModel.listaDeItens.collectAsState()
+    LazyColumn(
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier.padding(horizontal = 16.dp)
+    ) {
+        item {
 
-                ImagemTopo()
-                AdicionarItem(aoSalvarItem = { item ->
-                    viewModel.adicionarItem(item)
-                })
-                Spacer(Modifier.height(48.dp))
-                Titulo(
-                    texto = "Lista de Compras"
+            ImagemTopo()
+            AdicionarItem(aoSalvarItem = { item ->
+                viewModel.adicionarItem(item)
+            })
+            Spacer(Modifier.height(48.dp))
+            Titulo(
+                texto = "Lista de Compras"
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        if (listaDeItens.isEmpty()){
+            item {
+                Text(
+                    text = "Sua lista está vazia. Adicione itens a ela para não esquecer nada na próxima compra!",
+                    style= Typography.bodyLarge
                 )
             }
+        }
+
+        ListaDeItens(
+            lista = listaDeItens.filter { !it.comprado },
+            aoMudarStatus = { itemSelecionado ->
+                viewModel.mudarStatus(itemSelecionado)
+            },
+            aoEditarItem = { itemEditado, novoTexto ->
+                viewModel.editarItem(itemEditado, novoTexto)
+            },
+            aoRemoverItem = { itemRemovido ->
+                viewModel.removerItem(itemRemovido)
+            }
+        )
+
+        if (listaDeItens.any { it.comprado }) {
+            item {
+                Spacer(modifier = Modifier.height(40.dp))
+                Titulo(texto = "Comprado")
+                Spacer(modifier = Modifier.height(24.dp))
+            }
             ListaDeItens(
-                lista = listaDeItens.filter { !it.comprado },
+                lista = listaDeItens.filter { it.comprado },
                 aoMudarStatus = { itemSelecionado ->
                     viewModel.mudarStatus(itemSelecionado)
                 },
@@ -106,44 +142,26 @@ class MainActivity : ComponentActivity() {
                     viewModel.removerItem(itemRemovido)
                 }
             )
-            item {
-                Titulo(texto = "Comprado")
-            }
-
-            if (listaDeItens.any { it.comprado }) {
-                ListaDeItens(
-                    lista = listaDeItens.filter { it.comprado },
-                    aoMudarStatus = { itemSelecionado ->
-                        viewModel.mudarStatus(itemSelecionado)
-                    },
-                    aoEditarItem = { itemEditado, novoTexto ->
-                        viewModel.editarItem(itemEditado, novoTexto)
-                    },
-                    aoRemoverItem = { itemRemovido ->
-                        viewModel.removerItem(itemRemovido)
-                    }
-                )
-            }
         }
     }
+}
 
-    fun LazyListScope.ListaDeItens(
-        lista: List<ItemCompra>,
-        aoMudarStatus: (ItemCompra) -> Unit,
-        aoEditarItem: (ItemCompra, novoTexto: String) -> Unit = { _, _ -> },
-        aoRemoverItem: (ItemCompra) -> Unit
-    ) {
-        items(lista.size) { index ->
-            ItemDaLista(
-                item = lista[index],
-                aoMudarStatus = aoMudarStatus,
-                aoEditarItem = aoEditarItem,
-                aoRemoverItem = aoRemoverItem
-            )
-        }
-
+fun LazyListScope.ListaDeItens(
+    lista: List<ItemCompra>,
+    aoMudarStatus: (ItemCompra) -> Unit,
+    aoEditarItem: (ItemCompra, novoTexto: String) -> Unit = { _, _ -> },
+    aoRemoverItem: (ItemCompra) -> Unit
+) {
+    items(lista.size) { index ->
+        ItemDaLista(
+            item = lista[index],
+            aoMudarStatus = aoMudarStatus,
+            aoEditarItem = aoEditarItem,
+            aoRemoverItem = aoRemoverItem
+        )
     }
 
+}
 
 
 @Composable
@@ -200,19 +218,23 @@ fun ItemDaLista(
             }
             IconButton(
                 onClick = { aoRemoverItem(item) },
-                modifier = Modifier.padding(end = 8.dp)
+                modifier = Modifier
+                    .padding(end = 8.dp)
+                    .size(16.dp)
             ) {
                 Icone(
-                    Icons.Default.Delete,
-                    Modifier.size(16.dp)
+                    Icons.Default.Delete
                 )
             }
 
             IconButton(
                 onClick = {
                     edicao = true
-                }) { }
-            Icone(Icons.Default.Edit, Modifier.size(16.dp))
+                },
+                modifier = Modifier.size(16.dp)
+            ) {
+                Icone(Icons.Default.Edit)
+            }
         }
         Text(
             item.dataHora,
@@ -288,7 +310,26 @@ fun Icone(icone: ImageVector, modifier: Modifier = Modifier) {
 
 @Composable
 fun Titulo(texto: String, modifier: Modifier = Modifier) {
-    Text(text = texto, style = Typography.headlineLarge, modifier = modifier)
+    Text(
+        textAlign = TextAlign.Left,
+        text = texto,
+        style = Typography.headlineLarge,
+        modifier = modifier.padding(bottom = 8.dp).fillMaxWidth())
+    LinhaPontilhada(modifier = modifier)
+}
+
+@Composable
+fun LinhaPontilhada(modifier: Modifier = Modifier) {
+    val pathEffect = PathEffect.dashPathEffect(floatArrayOf(5f, 5f), 2.5f)
+    Canvas(modifier=modifier.fillMaxWidth()){
+        drawLine(
+            color = Coral,
+            pathEffect = pathEffect,
+            start = Offset(0f,0f),
+            end = Offset(size.width, 0f),
+            strokeWidth = 4f
+        )
+    }
 }
 
 @Preview
@@ -328,7 +369,6 @@ fun TituloPreview() {
         Titulo(texto = "Lista de Compras")
     }
 }
-
 
 
 data class ItemCompra(
