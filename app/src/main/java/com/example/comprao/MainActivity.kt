@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -35,6 +36,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -55,21 +57,25 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 class MainActivity : ComponentActivity() {
+
+    val viewModel: CompraoViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             CompraoTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    ListaDeCompras(Modifier.padding(innerPadding))
+                    ListaDeCompras(Modifier.padding(innerPadding), viewModel)
                 }
             }
         }
     }
+}
 
     @Composable
-    fun ListaDeCompras(modifier: Modifier = Modifier) {
-        var listaDeItens by rememberSaveable { mutableStateOf(listOf<ItemCompra>()) }
+    fun ListaDeCompras(modifier: Modifier = Modifier, viewModel: CompraoViewModel) {
+        val listaDeItens by viewModel.listaDeItens.collectAsState()
         LazyColumn(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -79,7 +85,7 @@ class MainActivity : ComponentActivity() {
 
                 ImagemTopo()
                 AdicionarItem(aoSalvarItem = { item ->
-                    listaDeItens = listaDeItens + item
+                    viewModel.adicionarItem(item)
                 })
                 Spacer(Modifier.height(48.dp))
                 Titulo(
@@ -89,25 +95,13 @@ class MainActivity : ComponentActivity() {
             ListaDeItens(
                 lista = listaDeItens.filter { !it.comprado },
                 aoMudarStatus = { itemSelecionado ->
-                    listaDeItens = listaDeItens.map { itemMap ->
-                        if (itemSelecionado == itemMap) {
-                            itemSelecionado.copy(comprado = !itemSelecionado.comprado)
-                        } else {
-                            itemMap
-                        }
-                    }
+                    viewModel.mudarStatus(itemSelecionado)
                 },
                 aoEditarItem = { itemEditado, novoTexto ->
-                    listaDeItens = listaDeItens.map { itemMap ->
-                        if (itemMap == itemEditado) {
-                            itemMap.copy(texto = novoTexto)
-                        } else {
-                            itemMap
-                        }
-                    }
+                    viewModel.editarItem(itemEditado, novoTexto)
                 },
                 aoRemoverItem = { itemRemovido ->
-                    listaDeItens = listaDeItens - itemRemovido
+                    viewModel.removerItem(itemRemovido)
                 }
             )
             item {
@@ -118,25 +112,13 @@ class MainActivity : ComponentActivity() {
                 ListaDeItens(
                     lista = listaDeItens.filter { it.comprado },
                     aoMudarStatus = { itemSelecionado ->
-                        listaDeItens = listaDeItens.map { itemMap ->
-                            if (itemSelecionado == itemMap) {
-                                itemSelecionado.copy(comprado = !itemSelecionado.comprado)
-                            } else {
-                                itemMap
-                            }
-                        }
+                        viewModel.mudarStatus(itemSelecionado)
                     },
                     aoEditarItem = { itemEditado, novoTexto ->
-                        listaDeItens = listaDeItens.map { itemMap ->
-                            if (itemMap == itemEditado) {
-                                itemMap.copy(texto = novoTexto)
-                            } else {
-                                itemMap
-                            }
-                        }
+                        viewModel.editarItem(itemEditado, novoTexto)
                     },
                     aoRemoverItem = { itemRemovido ->
-                        listaDeItens = listaDeItens - itemRemovido
+                        viewModel.removerItem(itemRemovido)
                     }
                 )
             }
@@ -159,7 +141,7 @@ class MainActivity : ComponentActivity() {
         }
 
     }
-}
+
 
 
 @Composable
