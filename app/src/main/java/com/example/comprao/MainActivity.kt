@@ -48,6 +48,8 @@ import com.example.comprao.ui.theme.CompraoTheme
 import com.example.comprao.ui.theme.Coral
 import com.example.comprao.ui.theme.Marinho
 import com.example.comprao.ui.theme.Typography
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -71,8 +73,8 @@ class MainActivity : ComponentActivity() {
             modifier = modifier
         ) {
             ImagemTopo()
-            AdicionarItem(aoSalvarItem = { textoNovo ->
-                listaDeItens = listaDeItens + ItemCompra(textoNovo)
+            AdicionarItem(aoSalvarItem = { item ->
+                listaDeItens = listaDeItens + item
             })
             Spacer(Modifier.height(48.dp))
             Titulo(
@@ -222,7 +224,7 @@ class MainActivity : ComponentActivity() {
                 Icone(Icons.Default.Edit, Modifier.size(16.dp))
             }
             Text(
-                "Segunda-Feiras (30/11/2024) às 8:30",
+                item.dataHora,
                 Modifier.padding(top = 8.dp),
                 style = Typography.labelSmall
             )
@@ -230,8 +232,8 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    fun AdicionarItem(aoSalvarItem: (texto: String) -> Unit, modifier: Modifier = Modifier) {
-        var texto = rememberSaveable { mutableStateOf("") }
+    fun AdicionarItem(aoSalvarItem: (item: ItemCompra) -> Unit, modifier: Modifier = Modifier) {
+        var texto by rememberSaveable { mutableStateOf("") }
         OutlinedTextField(
             placeholder = {
                 Text(
@@ -240,8 +242,8 @@ class MainActivity : ComponentActivity() {
                     style = Typography.bodyMedium
                 )
             },
-            value = texto.value,
-            onValueChange = { texto.value = it },
+            value = texto,
+            onValueChange = { texto = it },
             modifier = modifier
                 .fillMaxWidth()
                 .padding(8.dp),
@@ -251,8 +253,8 @@ class MainActivity : ComponentActivity() {
         Button(
             shape = RoundedCornerShape(24.dp),
             onClick = {
-                aoSalvarItem(texto.value)
-                texto.value = ""
+                aoSalvarItem(ItemCompra(texto,false, getDataHora()))
+                texto = ""
             },
             colors = ButtonDefaults.buttonColors(Coral),
             modifier = modifier
@@ -264,6 +266,12 @@ class MainActivity : ComponentActivity() {
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
             )
         }
+    }
+
+    fun getDataHora(): String{
+        val dataHoraAtual = System.currentTimeMillis()
+        val dataHoraFormatada = SimpleDateFormat("EEEE (dd/MM/yyyy) 'às' HH:mm", Locale("pt", "BR"))
+        return dataHoraFormatada.format(dataHoraAtual)
     }
 
     @Composable
@@ -291,7 +299,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     private fun ItemDaListaPreview() {
         CompraoTheme {
-            ItemDaLista(item = ItemCompra(texto = "teste"))
+            ItemDaLista(item = ItemCompra(texto = "teste", false, getDataHora()))
         }
     }
 
@@ -336,5 +344,6 @@ class MainActivity : ComponentActivity() {
 
 data class ItemCompra(
     var texto: String,
-    var comprado: Boolean = false
+    var comprado: Boolean = false,
+    val dataHora: String
 )
