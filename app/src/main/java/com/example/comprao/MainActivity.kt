@@ -10,6 +10,7 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -79,7 +80,7 @@ class MainActivity : ComponentActivity() {
         LazyColumn(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = modifier
+            modifier = modifier.padding(horizontal = 16.dp)
         ) {
             item {
 
@@ -246,13 +247,13 @@ fun AdicionarItem(aoSalvarItem: (item: ItemCompra) -> Unit, modifier: Modifier =
             texto = ""
         },
         colors = ButtonDefaults.buttonColors(Coral),
-        modifier = modifier
+        modifier = modifier,
+        contentPadding = PaddingValues(16.dp, 12.dp)
     ) {
         Text(
             text = "Salvar Item",
             color = Color.White,
             style = Typography.bodyLarge,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
         )
     }
 }
